@@ -65,10 +65,11 @@ public class ArtistDetailActivityFragment extends Fragment {
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.tracks_results, parent, false);
             }
-            TextView textView = (TextView) convertView.findViewById(R.id.list_item_textview);
+            TextView trackTextView = (TextView) convertView.findViewById(R.id.list_item_track_textview);
             ImageView imgView = (ImageView) convertView.findViewById(R.id.imageView);
 
-            textView.setText(track.name);
+            trackTextView.setText(track.name + System.getProperty("line.separator") + track.album.name);
+
             if(null!=track.album.images && !track.album.images.isEmpty() && null!=track.album.images.get(0) && null!=track.album.images.get(0).url) {
                 Picasso.with(getContext()).load(track.album.images.get(0).url).into(imgView);
             }

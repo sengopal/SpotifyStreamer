@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -135,9 +136,11 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<ArtistResult> artists) {
-            if (artists != null) {
+            if (artists != null && !artists.isEmpty()) {
                 listViewAdapter.clear();
                 listViewAdapter.addAll(artists);
+            }else{
+                Toast.makeText(getActivity(),"Artist matching the text not found. Please refine your search", Toast.LENGTH_SHORT).show();
             }
         }
 
