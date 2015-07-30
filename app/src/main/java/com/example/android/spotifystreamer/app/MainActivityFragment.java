@@ -1,7 +1,6 @@
 package com.example.android.spotifystreamer.app;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -37,8 +36,12 @@ public class MainActivityFragment extends Fragment {
     private static final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
     private ArtistsListsAdapter listViewAdapter;
-
+    private String mSearchText;
     public MainActivityFragment() {
+    }
+
+    public interface Callback {
+        public void onItemSelected(ArtistResult artistResult);
     }
 
     @Override
@@ -52,10 +55,10 @@ public class MainActivityFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 Log.d(LOG_TAG, "Editor Action called");
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    String searchText = v.getText().toString();
-                    Log.d(LOG_TAG, "Search Text: "+ searchText);
+                    mSearchText = v.getText().toString();
+                    Log.d(LOG_TAG, "Search Text: "+ mSearchText);
                     FetchArtists task = new FetchArtists();
-                    task.execute(searchText);
+                    task.execute(mSearchText);
                 }
                 return false;
             }
@@ -75,11 +78,8 @@ public class MainActivityFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ArtistResult artist = listViewAdapter.getItem(position);
-                Intent intent = new Intent(getActivity(), ArtistDetailActivity.class);
-                intent.putExtra("ARTIST_ID", artist.getId());
-                intent.putExtra("ARTIST_NAME", artist.getName());
-                startActivity(intent);
+                ArtistResult artistResult = listViewAdapter.getItem(position);
+                ((Callback) getActivity()).onItemSelected(artistResult);
             }
         });
         return rootView;
@@ -87,8 +87,7 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        EditText searchText = (EditText) getView().findViewById(R.id.search_text);
-        outState.putString("SEARCH_TEXT", searchText.getText().toString());
+        outState.putString("SEARCH_TEXT", mSearchText);
         outState.putParcelableArrayList("SEARCH_RESULTS",listViewAdapter.getArtistResultsForSave());
     }
 

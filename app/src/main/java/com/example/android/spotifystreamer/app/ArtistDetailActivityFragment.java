@@ -1,13 +1,14 @@
 package com.example.android.spotifystreamer.app;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -29,10 +30,16 @@ import kaaes.spotify.webapi.android.models.Tracks;
  * A placeholder fragment containing a simple view.
  */
 public class ArtistDetailActivityFragment extends Fragment {
-
+    private final String LOG_TAG = ArtistDetailActivityFragment.class.getSimpleName();
+    public static final String ARTIST_ID = "ARTIST_ID";
     TopTracksAdapter listViewAdapter;
+    private String mArtistId;
 
     public ArtistDetailActivityFragment() {
+    }
+
+    public interface Callback {
+        public void onItemSelected(Track track);
     }
 
     @Override
@@ -45,14 +52,38 @@ public class ArtistDetailActivityFragment extends Fragment {
         ListView listView = (ListView) rootView.findViewById(R.id.listview_tracks);
         listView.setAdapter(listViewAdapter);
 
-        Intent intent = getActivity().getIntent();
-        String artistId = intent.getStringExtra("ARTIST_ID");
-        FetchTopTracks task = new FetchTopTracks();
-        task.execute(artistId);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Track track = listViewAdapter.getItem(position);
+                Log.v(LOG_TAG, "Track Selected: "+track.name);
+                ((Callback) getActivity()).onItemSelected(track);
+            }
+        });
 
+        if(null!=savedInstanceState){
+            mArtistId = savedInstanceState.getString(ARTIST_ID);
+        }else {
+            Bundle arguments = getArguments();
+            if (arguments != null) {
+                mArtistId = arguments.getString(ARTIST_ID);
+            }
+        }
+        FetchTopTracks task = new FetchTopTracks();
+        task.execute(mArtistId);
         return rootView;
     }
 
+    /**
+     * Save all appropriate fragment state.
+     *
+     * @param outState
+     */
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(ARTIST_ID,mArtistId);
+        super.onSaveInstanceState(outState);
+    }
 
     public class TopTracksAdapter extends ArrayAdapter<Track> {
         public TopTracksAdapter(Context context, ArrayList<Track> tracks) {
@@ -73,6 +104,7 @@ public class ArtistDetailActivityFragment extends Fragment {
             if(null!=track.album.images && !track.album.images.isEmpty() && null!=track.album.images.get(0) && null!=track.album.images.get(0).url) {
                 Picasso.with(getContext()).load(track.album.images.get(0).url).into(imgView);
             }
+            imgView.setContentDescription("TO BE DONE FOR accessibility");
             return convertView;
         }
     }
