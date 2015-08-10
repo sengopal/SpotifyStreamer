@@ -16,7 +16,8 @@ public class PlaybackActivity extends AppCompatActivity implements FragmentManag
 
         if (savedInstanceState == null) {
             Bundle arguments = new Bundle();
-            arguments.putParcelable(PlaybackActivityFragment.TRACK, getIntent().getParcelableExtra(PlaybackActivityFragment.TRACK));
+            arguments.putParcelable(PlaybackActivityFragment.TRACKS, getIntent().getParcelableExtra(PlaybackActivityFragment.TRACKS));
+            arguments.putParcelable(PlaybackActivityFragment.TRACK_ID, getIntent().getParcelableExtra(PlaybackActivityFragment.TRACK_ID));
 
             PlaybackActivityFragment fragment = new PlaybackActivityFragment();
             fragment.setArguments(arguments);

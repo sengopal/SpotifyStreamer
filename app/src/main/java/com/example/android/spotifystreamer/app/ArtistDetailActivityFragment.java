@@ -34,12 +34,14 @@ public class ArtistDetailActivityFragment extends Fragment {
     public static final String ARTIST_ID = "ARTIST_ID";
     TopTracksAdapter listViewAdapter;
     private String mArtistId;
+    private List<Track> mCurrentTracks;
+
 
     public ArtistDetailActivityFragment() {
     }
 
     public interface Callback {
-        public void onItemSelected(Track track);
+        public void onItemSelected(List<Track> tracks, int position);
     }
 
     @Override
@@ -57,7 +59,7 @@ public class ArtistDetailActivityFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Track track = listViewAdapter.getItem(position);
                 Log.v(LOG_TAG, "Track Selected: "+track.name);
-                ((Callback) getActivity()).onItemSelected(track);
+                ((Callback) getActivity()).onItemSelected(mCurrentTracks, position);
             }
         });
 
@@ -86,8 +88,10 @@ public class ArtistDetailActivityFragment extends Fragment {
     }
 
     public class TopTracksAdapter extends ArrayAdapter<Track> {
+
         public TopTracksAdapter(Context context, ArrayList<Track> tracks) {
             super(context, 0, tracks);
+            mCurrentTracks = tracks;
         }
 
         @Override
@@ -126,6 +130,7 @@ public class ArtistDetailActivityFragment extends Fragment {
             if (tracks != null) {
                 listViewAdapter.clear();
                 listViewAdapter.addAll(tracks);
+                mCurrentTracks = tracks;
             }
         }
 
