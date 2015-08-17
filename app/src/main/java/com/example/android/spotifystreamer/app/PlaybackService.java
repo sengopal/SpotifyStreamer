@@ -83,7 +83,7 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(url);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "IOException :", e);
         }
         mMediaPlayer.prepareAsync();
     }
