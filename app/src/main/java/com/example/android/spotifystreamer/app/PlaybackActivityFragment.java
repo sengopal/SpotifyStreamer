@@ -40,7 +40,6 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
     private ArrayList<PlayTrack> mTracks;
     private int mCurrentTrackId;
 
-    private boolean mIsPlaying;
     private ServiceConnection mConnection = this;
     private Messenger mServiceMessenger = null;
 
@@ -51,6 +50,7 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
     private ImageView mAlbumImg;
 
     private final Messenger mReciever = new Messenger(new MessageRecieverHandler());
+    private boolean mNewSelection;
 
     public PlaybackActivityFragment() {
     }
@@ -100,6 +100,7 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
             mCurrentTrackId=0;
         }
         mCurrentTrack = mTracks.get(mCurrentTrackId);
+        stop();
         playUsingService();
     }
 
@@ -110,6 +111,7 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
             mCurrentTrackId=0;
         }
         mCurrentTrack = mTracks.get(mCurrentTrackId);
+        stop();
         playUsingService();
     }
 
@@ -117,14 +119,6 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_playback, container, false);
         Bundle arguments = getArguments();
-        if(null!=savedInstanceState){
-            mTracks = savedInstanceState.getParcelableArrayList(TRACKS);
-            mCurrentTrackId = savedInstanceState.getInt(TRACK_ID);
-        }else if (arguments != null) {
-            mTracks = arguments.getParcelableArrayList(TRACKS);
-            mCurrentTrackId = arguments.getInt(TRACK_ID);
-        }
-        mCurrentTrack = extractCurrentTrack(mCurrentTrackId);
 
         prevBtn = (ImageButton) rootView.findViewById(R.id.prevBtn);
         prevBtn.setOnClickListener(this);
@@ -144,16 +138,28 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
         mTrackTitle = (TextView) rootView.findViewById(R.id.trackTitle);
         mSeekLabelStart = (TextView) rootView.findViewById(R.id.seekLabelStart);
 
-        Log.v(LOG_TAG, "Playing: " + mCurrentTrack.getTrack());
 
-        if(mIsPlaying){
-            //The service is  already bound and playing
-            playUsingService();
-        }else {
-            Intent intent = new Intent(getActivity(), PlaybackService.class);
-            getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-            getActivity().startService(intent);
+        if(null!=savedInstanceState){
+            mTracks = savedInstanceState.getParcelableArrayList(TRACKS);
+            mCurrentTrackId = savedInstanceState.getInt(TRACK_ID);
+            if(!PlaybackService.isPlaying()){
+                playPauseBtn.setImageResource(android.R.drawable.ic_media_play);
+            }
+        }else if (arguments != null) {
+            mNewSelection = true;
+            mTracks = arguments.getParcelableArrayList(TRACKS);
+            mCurrentTrackId = arguments.getInt(TRACK_ID);
         }
+        mCurrentTrack = extractCurrentTrack(mCurrentTrackId);
+        setupAlbumArt();
+
+        Log.v(LOG_TAG, "Playing: " + mCurrentTrack.getTrack());
+        Log.v(LOG_TAG, "Is Service playing: " + PlaybackService.isPlaying());
+
+        Intent intent = new Intent(getActivity(), PlaybackService.class);
+        getActivity().startService(intent);
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
         return rootView;
     }
 
@@ -168,34 +174,35 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
     public void onServiceConnected(ComponentName name, IBinder service) {
         Log.v(LOG_TAG, "onServiceConnected");
         mServiceMessenger = new Messenger(service);
-        stop();
+        if(mNewSelection){
+            stop();
+        }
         playUsingService();
     }
 
     private void playUsingService() {
-        //First stop the player and reset before setting it up for the next one
-        if(mIsPlaying){
-            Log.v(LOG_TAG, "Stopping");
-            stop();
-        }
         try {
-            //Update Album art
-            if(null!=mCurrentTrack.getAlbumImg()) {
-                Picasso.with(getActivity()).load(mCurrentTrack.getAlbumImg()).into(mAlbumImg);
-            }
-            mAlbumTitle.setText(mCurrentTrack.getArtist() + System.getProperty("line.separator") + mCurrentTrack.getAlbum());
-            mTrackTitle.setText(mCurrentTrack.getTrack());
+            setupAlbumArt();
+
             Message msg = Message.obtain(null, PlaybackService.PLAY_TRACK);
             Bundle args = new Bundle();
             args.putString(PlaybackService.TRACK_URL, mCurrentTrack.getPreviewUrl());
             msg.setData(args);
             msg.replyTo=mReciever;
             mServiceMessenger.send(msg);
-            mIsPlaying=true;
         }
         catch (RemoteException e) {
             // In this case the service has crashed before we could even do anything with it
         }
+    }
+
+    private void setupAlbumArt() {
+        //Update Album art
+        if(null!=mCurrentTrack.getAlbumImg()) {
+            Picasso.with(getActivity()).load(mCurrentTrack.getAlbumImg()).into(mAlbumImg);
+        }
+        mAlbumTitle.setText(mCurrentTrack.getArtist() + System.getProperty("line.separator") + mCurrentTrack.getAlbum());
+        mTrackTitle.setText(mCurrentTrack.getTrack());
     }
 
     private void stop() {
@@ -225,7 +232,7 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
     private void resume(){
         try {
             Message msg = Message.obtain(null, PlaybackService.PLAY_TRACK);
-            msg.replyTo=mReciever;
+            msg.replyTo = mReciever;
             mServiceMessenger.send(msg);
         }
         catch (RemoteException e) {
@@ -277,12 +284,10 @@ public class PlaybackActivityFragment extends DialogFragment implements ImageBut
             Log.v(LOG_TAG, "Next: ");
             playNextTrack();
         }else if(v == playPauseBtn){
-            if(mIsPlaying){
-                mIsPlaying = false;
+            if(PlaybackService.isPlaying()){
                 playPauseBtn.setImageResource(android.R.drawable.ic_media_play);
                 pause();
             }else{
-                mIsPlaying = true;
                 playPauseBtn.setImageResource(android.R.drawable.ic_media_pause);
                 resume();
             }

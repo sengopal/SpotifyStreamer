@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -127,10 +128,12 @@ public class ArtistDetailActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<Track> tracks) {
-            if (tracks != null) {
+            if (tracks != null && !tracks.isEmpty()) {
                 listViewAdapter.clear();
                 listViewAdapter.addAll(tracks);
                 mCurrentTracks = tracks;
+            }else{
+                Toast.makeText(getActivity(), "Top 10 songs not available for this artist. Please try a different one", Toast.LENGTH_SHORT).show();
             }
         }
 

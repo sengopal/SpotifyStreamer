@@ -1,6 +1,8 @@
 package com.example.android.spotifystreamer.app;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -44,6 +46,14 @@ public class MainActivityFragment extends Fragment {
         public void onItemSelected(ArtistResult artistResult);
     }
 
+    //Based on a stackoverflow snippet
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -57,8 +67,12 @@ public class MainActivityFragment extends Fragment {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     mSearchText = v.getText().toString();
                     Log.d(LOG_TAG, "Search Text: "+ mSearchText);
-                    FetchArtists task = new FetchArtists();
-                    task.execute(mSearchText);
+                    if(isNetworkAvailable()) {
+                        FetchArtists task = new FetchArtists();
+                        task.execute(mSearchText);
+                    }else{
+                        Toast.makeText(getActivity(),"Please check your Internet connectivity and try again.", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 return false;
             }
@@ -88,7 +102,9 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putString("SEARCH_TEXT", mSearchText);
-        outState.putParcelableArrayList("SEARCH_RESULTS",listViewAdapter.getArtistResultsForSave());
+        if(null!=listViewAdapter && null!=listViewAdapter.getArtistResultsForSave()) {
+            outState.putParcelableArrayList("SEARCH_RESULTS", listViewAdapter.getArtistResultsForSave());
+        }
     }
 
     public class ArtistsListsAdapter extends ArrayAdapter<ArtistResult>{

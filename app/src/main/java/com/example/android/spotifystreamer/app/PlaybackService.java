@@ -35,6 +35,7 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
     private Messenger mClient = null;
     private final Messenger mMessenger = new Messenger(new PlaybackServiceHandler());
     private static boolean isRunning;
+    private static boolean isPlaying;
     private MediaObserver observer;
 
     /**
@@ -94,6 +95,7 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
         observer = new MediaObserver();
         new Thread(observer).start();
         isRunning = true;
+        isPlaying = true;
         Log.v(LOG_TAG, "Starting to play: ");
     }
 
@@ -107,6 +109,10 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
 
     public static boolean isRunning() {
         return isRunning;
+    }
+
+    public static boolean isPlaying(){
+        return isPlaying;
     }
 
     /**
@@ -131,6 +137,7 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
             observer.stop();
         }
         isRunning = false;
+        isPlaying = false;
     }
 
     private class PlaybackServiceHandler extends Handler { // Handler of incoming messages from clients.
@@ -147,9 +154,11 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
                     }else{
                         play(msg.getData().getString(PlaybackService.TRACK_URL));
                     }
+                    isPlaying = true;
                     break;
                 case PAUSE_TRACK:
                     mMediaPlayer.pause();
+                    isPlaying = false;
                     break;
                 case SEEK_IN_TRACK:
                     mMediaPlayer.seekTo(msg.arg1);
@@ -180,7 +189,7 @@ public class PlaybackService extends Service implements MediaPlayer.OnPreparedLi
                     mClient.send(msg);
                     Thread.sleep(200);
                 } catch (Exception e) {
-                    Log.v(LOG_TAG, "Exception");
+                    Log.v(LOG_TAG, "Exception", e);
                 }
             }
         }
