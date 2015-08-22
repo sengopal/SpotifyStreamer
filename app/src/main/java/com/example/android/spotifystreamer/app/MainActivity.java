@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
 
 
     @Override
-    public void onItemSelected(List<Track> tracks, int position) {
-        CallbackUtil.onItemSelected(position, tracks, mTwoPane, getSupportFragmentManager());
+    public void onItemSelected(List<Track> tracks, int position, boolean playNext) {
+        CallbackUtil.onItemSelected(position, tracks, mTwoPane, getSupportFragmentManager(), playNext);
     }
 }

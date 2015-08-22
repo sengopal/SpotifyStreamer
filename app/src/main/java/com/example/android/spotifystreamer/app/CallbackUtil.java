@@ -14,11 +14,12 @@ import kaaes.spotify.webapi.android.models.Track;
  * Created by sengopal on 7/30/15.
  */
 public class CallbackUtil {
-    public static void onItemSelected(int selectedTrack, List<Track> tracks, boolean isTwoPane, FragmentManager fragManager) {
+    public static void onItemSelected(int selectedTrack, List<Track> tracks, boolean isTwoPane, FragmentManager fragManager, boolean playNext) {
         PlaybackActivityFragment fragment = new PlaybackActivityFragment();
         Bundle args = new Bundle();
         args.putParcelableArrayList(PlaybackActivityFragment.TRACKS, convertTo(tracks));
         args.putInt(PlaybackActivityFragment.TRACK_ID, selectedTrack);
+        args.putBoolean(PlaybackActivityFragment.PLAY_NEXT, playNext);
         fragment.setArguments(args);
         if (isTwoPane) {
             //getSupportFragmentManager().beginTransaction().replace(R.id.tracks_detail_container, fragment, PLAYBACKFRAG_TAG).addToBackStack(null).commit();

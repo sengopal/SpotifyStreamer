@@ -35,7 +35,6 @@ public class ArtistDetailActivity extends AppCompatActivity implements ArtistDet
         Intent intent = getIntent();
         String artistName = intent.getStringExtra("ARTIST_NAME");
         getSupportActionBar().setSubtitle(artistName);
-
     }
 
     @Override
@@ -79,7 +78,7 @@ public class ArtistDetailActivity extends AppCompatActivity implements ArtistDet
     }
 
     @Override
-    public void onItemSelected(List<Track> tracks, int position) {
-        CallbackUtil.onItemSelected(position, tracks, mTwoPane, getSupportFragmentManager());
+    public void onItemSelected(List<Track> tracks, int position, boolean playNext) {
+        CallbackUtil.onItemSelected(position, tracks, mTwoPane, getSupportFragmentManager(), playNext);
     }
 }
